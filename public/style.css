@@ -1,0 +1,150 @@
+/* ================================
+   GLOBAL THEME VARIABLES
+   ================================ */
+:root {
+  --font-family: "JetBrains Mono", monospace;
+
+  --text-color: #fff;
+  --text-color-alt: #aaa;
+
+  --background-color: #000;
+  --background-color-alt: #111;
+
+  --border-thickness: 2px;
+  --line-height: 1.2rem;
+
+  --font-weight-normal: 500;
+  --font-weight-medium: 600;
+  --font-weight-bold: 800;
+
+  font-family: var(--font-family);
+  font-optical-sizing: auto;
+  font-weight: var(--font-weight-normal);
+  font-style: normal;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-size: 16px;
+
+  text-align: center;
+}
+
+/* ================================
+   GLOBAL BODY STYLES
+   ================================ */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: var(--font-family);
+  line-height: var(--line-height);
+  margin: 0;
+  padding: 0;
+}
+
+/* ================================
+   HEADINGS
+   ================================ */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-color);
+  font-weight: var(--font-weight-bold);
+}
+
+/* ================================
+   LINKS
+   ================================ */
+a {
+  color: var(--text-color-alt);
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+  color: var(--text-color);
+}
+
+/* ================================
+   NAVBAR STYLING
+   ================================ */
+.custom-navbar {
+  background-color: var(--background-color) !important;
+  border-bottom: var(--border-thickness) solid var(--text-color-alt);
+  padding: 0.8rem 1.2rem;
+  font-family: var(--font-family);
+}
+
+.custom-navbar .navbar-brand {
+  color: var(--text-color) !important;
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 1px;
+  font-size: 1.3rem;
+}
+
+.custom-navbar .nav-link {
+  color: var(--text-color-alt) !important;
+  font-weight: var(--font-weight-medium);
+  margin-right: 12px;
+  transition: color 0.2s ease-in-out;
+}
+
+.custom-navbar .nav-link:hover {
+  color: var(--text-color) !important;
+}
+
+/* ================================
+   MOBILE NAVBAR TOGGLER
+   ================================ */
+.custom-toggler {
+  border-color: var(--text-color) !important;
+}
+
+
+/* ================================
+   FORM INPUTS
+   ================================ */
+input, textarea, select {
+  background-color: var(--background-color-alt);
+  color: var(--text-color);
+  border: var(--border-thickness) solid #000000;
+  padding: 8px;
+  border-radius: 5px;
+  width: 100%;
+  font-family: var(--font-family);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--text-color);
+}
+
+/* ================================
+   BUTTONS
+   ================================ */
+button, .btn {
+  font-family: var(--font-family);
+  font-weight: var(--font-weight-medium);
+}
+
+.btn-primary, .btn-success, .btn-warning, .btn-info, .btn-danger {
+  border: var(--border-thickness) solid var(--text-color-alt);
+}
+
+/* ================================
+   CARDS / CONTAINERS
+   ================================ */
+.card, .container, .p-4, .shadow-sm {
+  background-color: var(--background-color-alt) !important;
+  color: var(--text-color) !important;
+  border-color: #000000 !important;
+}
+
+/* ================================
+   TABLES
+   ================================ */
+table {
+  color: var(--text-color);
+  border-color: var(--text-color-alt);
+}
+
+th, td {
+  padding: 0.6rem;
+  border-color: var(--text-color-alt);
+}
+

@@ -1,0 +1,28 @@
+{
+  "name": "final-project-cst336",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Paulo-Camacho/Final-Project-CST336.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Paulo-Camacho/Final-Project-CST336/issues"
+  },
+  "homepage": "https://github.com/Paulo-Camacho/Final-Project-CST336#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "express-sessions": "^1.0.6",
+    "mysql2": "^3.15.3"
+  }
+}
