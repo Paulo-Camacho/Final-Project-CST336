@@ -1,17 +1,32 @@
 <%- include("partials/header.ejs") %>
-    <title>Login</title>
+<title>Login</title>
 
-    <body>
+<body>
+  <%- include("partials/nav_bar.ejs") %>
 
-        <%- include("partials/nav_bar.ejs") %>
-            <h1>Login0</h1>
-            <div id="content">
-                <!-- We will append elements here using JavaScript -->
-            </div>
+  <div class="login-wrapper">
+    <h1 class="mb-4">Login</h1>
 
-            <!-- Link to external JavaScript file -->
-            <!-- We could use defer to move this up -->
+    <div class="login-card">
+      <form method="POST" action="/loginProcess">
+
+        <!-- Email -->
+        <div class="mb-3 text-start">
+          <label class="form-label">Email</label>
+          <input type="text" name="email" class="form-control">
+        </div>
+
+        <!-- Password -->
+        <div class="mb-3 text-start">
+          <label class="form-label">Password</label>
+          <input type="password" name="password" class="form-control">
+        </div>
+
+        <button class="btn btn-danger w-100 mt-3">Login</button>
+      </form>
+    </div>
+
+  </div>
+
   <%- include("partials/footer.ejs") %>
-    </body>
-
-    </html>
+</body>
