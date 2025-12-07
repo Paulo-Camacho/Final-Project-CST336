@@ -2,23 +2,15 @@ import express from 'express';
 import mysql from 'mysql2/promise';
 import session from 'express-session';
 import bcrypt from 'bcrypt';
+import "dotenv/config"; // Enviroment values
 
 const app = express();
-
-const password = "s3cr3t";
-
-const run = async () => {
-  const hash = await bcrypt.hash(password, 10);
-  console.log(`this is the hash${hash}`);
-};
-
-run();
 
 
 /////////////// This is middleware for express-session
 app.use(
   session({
-    secret: "superSecretKey123",    // any long random string
+    secret: "superSecretKey123",
     resave: false,
     saveUninitialized: true,
   })
@@ -39,14 +31,15 @@ app.use(express.urlencoded({ extended: true }));
 
 //setting up database connection pool
 const pool = mysql.createPool({
-  host: 'k2fqe1if4c7uowsh.cbetxkdyhwsb.us-east-1.rds.amazonaws.com',
-  user: 'toszv1mikaqtn04s',
-  password: 'm35rbj01t9klhgh8',
-  database: 'g4ekc2ffehhxsjqq',
+  /// NOTICE THIS NAMING CONVENTION TO RETRIEVE THE DATA FROM THE .env file that we made next to index.mjs
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE,
   connectionLimit: 10,
   waitForConnections: true,
 });
-//routes
+// ROUTES
 app.get('/', (req, res) => {
   //    res.send('Hello Express app!')
   res.render('login.ejs');
@@ -56,13 +49,53 @@ app.get('/login', (req, res) => {
   res.render('login.ejs');
 });
 
-app.post('loginProcess', (req, res) => {
-  const { email, password } = req.body;
-  // HARD CODED
+app.post('/loginProcess', async (req, res) => {
+  const { username, password } = req.body;
 
-})
+  try {
+    // 1. Look up user
+    const sql = 'SELECT * FROM users WHERE username = ? LIMIT 1';
+    const [rows] = await pool.query(sql, [username]);
 
-app.get('/home', (req, res) => {
+    if (rows.length === 0) {
+      return res.render('login.ejs', {
+        loginError: 'Invalid username or password',
+      });
+    }
+
+    const user = rows[0];
+
+    // 2. Check password
+    if (password !== user.password) {
+      return res.render('login.ejs', {
+        loginError: 'Invalid username or password',
+      });
+    }
+
+    // 3. SUCCESS — set session
+    req.session.authenticated = true;
+    req.session.username = user.username;
+
+    // 4. Redirect to home
+    return res.redirect('/home');
+  } catch (err) {
+    console.error(err);
+    return res.render('login.ejs', { loginError: 'Server error' });
+  }
+});
+
+
+// MIDDLEWARE
+function ensureLoggedIn(req, res, next) {
+  if (!req.session.authenticated) {
+    return res.redirect('/login');
+  }
+  next();
+}
+
+
+// Passing ensuredLoggedIn middleware to make sure user is logged in during the session
+app.get('/home' , ensureLoggedIn, (req, res) => {
   //    res.send('Hello Express app!')
   res.render('home.ejs');
 });

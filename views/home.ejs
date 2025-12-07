@@ -1,8 +1,114 @@
 <%- include("partials/header.ejs") %>
-    <title>Home</title>
-    <body>
-        <%- include("partials/nav_bar.ejs") %>
-        <h1>Home</h1>
-        <%- include("partials/footer.ejs") %>
-    </body>
+<body>
+<%- include("partials/nav_bar.ejs") %>
 
+<div class="container mt-4">
+
+  <h1>Dashboard</h1>
+
+  <!-- ===========================
+       MACRO TRACKER SECTION
+  ============================== -->
+  <section class="mb-5">
+    <h2>Macro Tracker</h2>
+
+    <!-- Form to Add Food -->
+    <form action="/addFood" method="POST" class="mb-3">
+      <div class="row">
+        <div class="col">
+          <input type="text" name="foodName" class="form-control" placeholder="Food Name">
+        </div>
+        <div class="col">
+          <input type="number" name="calories" class="form-control" placeholder="Calories">
+        </div>
+        <div class="col">
+          <select name="mealType" class="form-select">
+            <option>Breakfast</option>
+            <option>Lunch</option>
+            <option>Dinner</option>
+            <option>Snack</option>
+          </select>
+        </div>
+        <div class="col">
+          <button class="btn btn-success">Add</button>
+        </div>
+      </div>
+    </form>
+
+    <!-- Display Food Table -->
+    <table class="table table-dark table-striped">
+      <thead>
+        <tr>
+          <th>Food</th>
+          <th>Calories</th>
+          <th>Meal</th>
+          <th>Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (foods) { foods.forEach(food => { %>
+          <tr>
+            <td><%= food.foodName %></td>
+            <td><%= food.calories %></td>
+            <td><%= food.mealType %></td>
+            <td>
+              <a href="/editFood/<%= food.id %>" class="btn btn-warning btn-sm">Edit</a>
+            </td>
+          </tr>
+        <% }) } %>
+      </tbody>
+    </table>
+  </section>
+
+
+  <!-- ===========================
+       GYM LOG SECTION
+  ============================== -->
+  <section>
+    <h2>Gym Log</h2>
+
+    <form action="/addGymLog" method="POST" class="mb-3">
+      <div class="row">
+        <div class="col">
+          <input type="text" name="exercise" class="form-control" placeholder="Exercise">
+        </div>
+        <div class="col">
+          <input type="number" name="weight" class="form-control" placeholder="Weight">
+        </div>
+        <div class="col">
+          <input type="number" name="reps" class="form-control" placeholder="Reps">
+        </div>
+        <div class="col">
+          <button class="btn btn-primary">Add</button>
+        </div>
+      </div>
+    </form>
+
+    <table class="table table-dark table-striped">
+      <thead>
+        <tr>
+          <th>Exercise</th>
+          <th>Weight</th>
+          <th>Reps</th>
+          <th>Edit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (logs) { logs.forEach(item => { %>
+          <tr>
+            <td><%= item.exercise %></td>
+            <td><%= item.weight %></td>
+            <td><%= item.reps %></td>
+            <td>
+              <a href="/editGym/<%= item.id %>" class="btn btn-warning btn-sm">Edit</a>
+            </td>
+          </tr>
+        <% }) } %>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<%- include("partials/footer.ejs") %>
+</body>

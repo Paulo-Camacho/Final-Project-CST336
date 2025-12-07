@@ -19,6 +19,7 @@
   "homepage": "https://github.com/Paulo-Camacho/Final-Project-CST336#readme",
   "dependencies": {
     "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.3",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
     "express-session": "^1.18.2",

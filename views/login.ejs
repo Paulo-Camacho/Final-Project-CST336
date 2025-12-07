@@ -8,12 +8,18 @@
     <h1 class="mb-4">Login</h1>
 
     <div class="login-card">
+
+      <!-- ERROR MESSAGE -->
+      <% if (typeof loginError !== "undefined") { %>
+        <p class="text-danger fw-bold"><%= loginError %></p>
+      <% } %>
+
       <form method="POST" action="/loginProcess">
 
-        <!-- Email -->
+        <!-- Username -->
         <div class="mb-3 text-start">
-          <label class="form-label">Email</label>
-          <input type="text" name="email" class="form-control">
+          <label class="form-label">Username</label>
+          <input type="text" name="username" class="form-control">
         </div>
 
         <!-- Password -->
