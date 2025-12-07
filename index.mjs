@@ -178,7 +178,7 @@ app.post('/addGymLog', ensureLoggedIn, async (req, res) => {
   await pool.query(sql, [exercise, weight, reps, entryDate]);
   res.redirect('/home');
 });
-
+// Hello world
 /* ============================================
    SEARCH FOOD — OPENFOODFACTS API
 ============================================ */
