@@ -1,42 +1,38 @@
 import express from 'express';
 import mysql from 'mysql2/promise';
 import session from 'express-session';
-import bcrypt from 'bcrypt';
 import 'dotenv/config';
 
 const app = express();
 
-/* ========================================================
+/* ================================================
    SESSION SETUP
-   - Keeps users logged in across pages
-   - Stores data in req.session
-======================================================== */
+   Persists login across pages
+================================================ */
 app.use(
   session({
-    secret: 'superSecretKey123', // Key used to sign the session cookie
-    resave: false, // Do not save session if nothing changed
-    saveUninitialized: true, // Create session even if empty
+    secret: 'superSecretKey123',
+    resave: false,
+    saveUninitialized: true,
   })
 );
 
-// Make session values available inside all EJS views
+// Make session available in all EJS views
 app.use((req, res, next) => {
   res.locals.session = req.session;
   next();
 });
 
-/* ========================================================
+/* ================================================
    EXPRESS CONFIG
-======================================================== */
-app.set('view engine', 'ejs'); // Use EJS for views
-app.use(express.static('public')); // Serve CSS/JS files from /public
-app.use(express.urlencoded({ extended: true })); // Read POST form data
+================================================ */
+app.set('view engine', 'ejs');
+app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
 
-/* ========================================================
+/* ================================================
    DATABASE CONNECTION
-   - Uses environment variables from .env
-   - Creates a connection pool for efficiency
-======================================================== */
+================================================ */
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -46,35 +42,28 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
-/* ========================================================
-   AUTH MIDDLEWARE
-   - Restricts routes to logged-in users only
-======================================================== */
+/* ================================================
+   LOGIN PROTECTION
+================================================ */
 function ensureLoggedIn(req, res, next) {
-  if (!req.session.authenticated) {
-    return res.redirect('/login');
-  }
+  if (!req.session.authenticated) return res.redirect('/login');
   next();
 }
 
-/* ========================================================
+/* ================================================
    LOGIN ROUTES
-======================================================== */
-
-// Show login page
+================================================ */
 app.get('/', (req, res) => res.render('login.ejs'));
 app.get('/login', (req, res) => res.render('login.ejs'));
 
-// Handle login attempt
 app.post('/loginProcess', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    // Look up user in database
     const sql = 'SELECT * FROM users WHERE username = ? LIMIT 1';
     const [rows] = await pool.query(sql, [username]);
 
-    if (rows.length === 0) {
+    if (rows.length === 0 || password !== rows[0].password) {
       return res.render('login.ejs', {
         loginError: 'Invalid username or password',
       });
@@ -82,31 +71,20 @@ app.post('/loginProcess', async (req, res) => {
 
     const user = rows[0];
 
-    // Compare password (non-hashed in this project)
-    if (password !== user.password) {
-      return res.render('login.ejs', {
-        loginError: 'Invalid username or password',
-      });
-    }
-
-    // Store login info in session
     req.session.authenticated = true;
     req.session.username = user.username;
     req.session.userId = user.userId;
 
-    return res.redirect('/home'); // Go to dashboard
+    res.redirect('/home');
   } catch (err) {
     console.error(err);
-    return res.render('login.ejs', { loginError: 'Server error' });
+    res.render('login.ejs', { loginError: 'Server error' });
   }
 });
 
-/* ========================================================
+/* ================================================
    HOME DASHBOARD
-   - Loads food entries
-   - Loads gym logs
-   - Only available if logged in
-======================================================== */
+================================================ */
 app.get('/home', ensureLoggedIn, async (req, res) => {
   try {
     const [foods] = await pool.query(
@@ -119,16 +97,22 @@ app.get('/home', ensureLoggedIn, async (req, res) => {
     res.render('home.ejs', { foods, logs });
   } catch (err) {
     console.error(err);
-    res.send('Error loading dashboard');
+    res.send('Dashboard error');
   }
 });
 
-/* ========================================================
+/* ================================================
+   DATE FORMATTER (yyyy-mm-dd)
+================================================ */
+function formatDate(date) {
+  return new Date(date).toISOString().split('T')[0];
+}
+
+/* ================================================
    ADD FOOD ENTRY
-   - Inserts new food into database
-======================================================== */
+================================================ */
 app.post('/addFood', ensureLoggedIn, async (req, res) => {
-  const {
+  let {
     name,
     brand,
     calories,
@@ -141,15 +125,16 @@ app.post('/addFood', ensureLoggedIn, async (req, res) => {
     cholesterol,
     sat_fat,
     unsat_fat,
+    mealType,
     entryDate,
   } = req.body;
 
+  entryDate = entryDate ? formatDate(entryDate) : formatDate(new Date());
+
   const sql = `
     INSERT INTO foods
-      (name, brand, calories, protein, carbs, fat,
-       sodium, sugar, fiber, cholesterol, sat_fat,
-       unsat_fat, entryDate)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (name, brand, calories, protein, carbs, fat, sodium, sugar, fiber, cholesterol, sat_fat, unsat_fat, mealType, entryDate)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
   await pool.query(sql, [
@@ -165,17 +150,20 @@ app.post('/addFood', ensureLoggedIn, async (req, res) => {
     cholesterol,
     sat_fat,
     unsat_fat,
+    mealType,
     entryDate,
   ]);
 
   res.redirect('/home');
 });
 
-/* ========================================================
+/* ================================================
    ADD GYM LOG ENTRY
-======================================================== */
+================================================ */
 app.post('/addGymLog', ensureLoggedIn, async (req, res) => {
-  const { exercise, weight, reps, entryDate } = req.body;
+  let { exercise, weight, reps, entryDate } = req.body;
+
+  entryDate = entryDate ? formatDate(entryDate) : formatDate(new Date());
 
   const sql = `
     INSERT INTO gym_logs (exercise, weight, reps, entryDate)
@@ -186,22 +174,68 @@ app.post('/addGymLog', ensureLoggedIn, async (req, res) => {
   res.redirect('/home');
 });
 
-/* ========================================================
-   SIMPLE DATABASE TEST ROUTE
-======================================================== */
+/* ================================================
+   FOOD SEARCH
+   - Returns macros for foods
+   - USING OPEN FOOD FACTS
+================================================ */
+app.get('/searchFood', ensureLoggedIn, async (req, res) => {
+  const query = req.query.query;
+  if (!query) return res.json([]);
+
+  try {
+    const url =
+      'https://world.openfoodfacts.org/api/v2/search?' +
+      'fields=product_name,nutriments&page_size=10&' +
+      'search_terms=' +
+      encodeURIComponent(query);
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'GalTrackerApp/1.0 (student-project@csumb.edu)',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!data.products) return res.json([]);
+
+    const items = data.products.map((p) => {
+      const n = p.nutriments || {};
+
+      return {
+        name: p.product_name || 'Unknown food',
+        calories: n['energy-kcal_100g'] || 0,
+        protein: n.proteins_100g || 0,
+        carbs: n.carbohydrates_100g || 0,
+        fat: n.fat_100g || 0,
+        sodium: n.sodium_100g || 0,
+        sugar: n.sugars_100g || 0,
+        fiber: n.fiber_100g || 0,
+      };
+    });
+
+    res.json(items);
+  } catch (err) {
+    console.error('OpenFoodFacts Error:', err);
+    res.json([]);
+  }
+});
+
+/* ================================================
+   TEST DATABASE CONNECTION
+================================================ */
 app.get('/dbTest', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT NOW()');
     res.send(rows);
   } catch (err) {
-    res.status(500).send('Database error');
+    res.status(500).send('DB error');
   }
 });
 
-/* ========================================================
-   START THE SERVER
-======================================================== */
+/* ================================================
+   START SERVER
+================================================ */
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Website is live at port: ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Website running on port ${PORT}`));
