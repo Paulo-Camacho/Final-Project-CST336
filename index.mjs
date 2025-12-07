@@ -5,6 +5,16 @@ import bcrypt from 'bcrypt';
 
 const app = express();
 
+const password = "s3cr3t";
+
+const run = async () => {
+  const hash = await bcrypt.hash(password, 10);
+  console.log(`this is the hash${hash}`);
+};
+
+run();
+
+
 /////////////// This is middleware for express-session
 app.use(
   session({
