@@ -1,58 +1,71 @@
 <%- include("partials/header.ejs") %>
+
 <body>
 <%- include("partials/nav_bar.ejs") %>
 
 <div class="container mt-4">
 
-  <h1>Dashboard</h1>
+  <h1 class="mb-4">Dashboard</h1>
 
   <!-- ===========================
-       MACRO TRACKER SECTION
-  ============================== -->
+       MACRO TRACKER
+  =============================== -->
   <section class="mb-5">
     <h2>Macro Tracker</h2>
 
-    <!-- Form to Add Food -->
+    <!-- Add Food Form -->
     <form action="/addFood" method="POST" class="mb-3">
-      <div class="row">
-        <div class="col">
-          <input type="text" name="foodName" class="form-control" placeholder="Food Name">
+      <div class="row g-2">
+
+        <div class="col-md-3">
+          <input type="text" name="name" class="form-control" placeholder="Food Name" required>
         </div>
-        <div class="col">
-          <input type="number" name="calories" class="form-control" placeholder="Calories">
+
+        <div class="col-md-2">
+          <input type="number" name="calories" class="form-control" placeholder="Calories" required>
         </div>
-        <div class="col">
-          <select name="mealType" class="form-select">
-            <option>Breakfast</option>
-            <option>Lunch</option>
-            <option>Dinner</option>
-            <option>Snack</option>
-          </select>
+
+        <div class="col-md-2">
+          <input type="number" name="protein" class="form-control" placeholder="Protein (g)">
         </div>
-        <div class="col">
-          <button class="btn btn-success">Add</button>
+
+        <div class="col-md-2">
+          <input type="number" name="carbs" class="form-control" placeholder="Carbs (g)">
         </div>
+
+        <div class="col-md-2">
+          <input type="number" name="fat" class="form-control" placeholder="Fat (g)">
+        </div>
+
+        <div class="col-md-1">
+          <button class="btn btn-success w-100">Add</button>
+        </div>
+
       </div>
     </form>
 
-    <!-- Display Food Table -->
+    <!-- Foods Table -->
     <table class="table table-dark table-striped">
       <thead>
         <tr>
-          <th>Food</th>
-          <th>Calories</th>
-          <th>Meal</th>
+          <th>Name</th>
+          <th>Cal</th>
+          <th>P</th>
+          <th>C</th>
+          <th>F</th>
           <th>Edit</th>
         </tr>
       </thead>
       <tbody>
-        <% if (foods) { foods.forEach(food => { %>
+        <% if (foods && foods.length > 0) { foods.forEach(food => { %>
           <tr>
-            <td><%= food.foodName %></td>
+            <td><%= food.name %></td>
             <td><%= food.calories %></td>
-            <td><%= food.mealType %></td>
+            <td><%= food.protein %></td>
+            <td><%= food.carbs %></td>
+            <td><%= food.fat %></td>
             <td>
-              <a href="/editFood/<%= food.id %>" class="btn btn-warning btn-sm">Edit</a>
+              <a href="/editFood/<%= food.foodId %>" class="btn btn-warning btn-sm">Edit</a>
             </td>
           </tr>
         <% }) } %>
@@ -62,28 +75,35 @@
 
 
   <!-- ===========================
-       GYM LOG SECTION
-  ============================== -->
-  <section>
+       GYM LOG
+  =============================== -->
+  <section class="mb-5">
     <h2>Gym Log</h2>
 
+    <!-- Add Log Form -->
     <form action="/addGymLog" method="POST" class="mb-3">
-      <div class="row">
-        <div class="col">
-          <input type="text" name="exercise" class="form-control" placeholder="Exercise">
+      <div class="row g-2">
+
+        <div class="col-md-4">
+          <input type="text" name="exercise" class="form-control" placeholder="Exercise" required>
         </div>
-        <div class="col">
+
+        <div class="col-md-3">
           <input type="number" name="weight" class="form-control" placeholder="Weight">
         </div>
-        <div class="col">
+
+        <div class="col-md-3">
           <input type="number" name="reps" class="form-control" placeholder="Reps">
         </div>
-        <div class="col">
-          <button class="btn btn-primary">Add</button>
+
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100">Add</button>
         </div>
+
       </div>
     </form>
 
+    <!-- Gym Log Table -->
     <table class="table table-dark table-striped">
       <thead>
         <tr>
@@ -94,18 +114,19 @@
         </tr>
       </thead>
       <tbody>
-        <% if (logs) { logs.forEach(item => { %>
+        <% if (logs && logs.length > 0) { logs.forEach(log => { %>
           <tr>
-            <td><%= item.exercise %></td>
-            <td><%= item.weight %></td>
-            <td><%= item.reps %></td>
+            <td><%= log.exercise %></td>
+            <td><%= log.weight %></td>
+            <td><%= log.reps %></td>
             <td>
-              <a href="/editGym/<%= item.id %>" class="btn btn-warning btn-sm">Edit</a>
+              <a href="/editGym/<%= log.logId %>" class="btn btn-warning btn-sm">Edit</a>
             </td>
           </tr>
         <% }) } %>
       </tbody>
     </table>
+
   </section>
 
 </div>
