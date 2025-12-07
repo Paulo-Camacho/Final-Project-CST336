@@ -1,14 +1,14 @@
 import express from 'express';
 import mysql from 'mysql2/promise';
 import session from 'express-session';
+import bcrypt from 'bcrypt';
 import 'dotenv/config';
 
 const app = express();
 
-/* ================================================
+/* ============================================
    SESSION SETUP
-   Persists login across pages
-================================================ */
+============================================ */
 app.use(
   session({
     secret: 'superSecretKey123',
@@ -17,22 +17,23 @@ app.use(
   })
 );
 
-// Make session available in all EJS views
+// Make session available to all EJS templates
 app.use((req, res, next) => {
   res.locals.session = req.session;
   next();
 });
 
-/* ================================================
-   EXPRESS CONFIG
-================================================ */
+/* ============================================
+   EXPRESS SETUP
+============================================ */
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json()); // Needed for API insert from JS
 
-/* ================================================
+/* ============================================
    DATABASE CONNECTION
-================================================ */
+============================================ */
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -42,17 +43,17 @@ const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
-/* ================================================
-   LOGIN PROTECTION
-================================================ */
+/* ============================================
+   LOGIN GUARD
+============================================ */
 function ensureLoggedIn(req, res, next) {
   if (!req.session.authenticated) return res.redirect('/login');
   next();
 }
 
-/* ================================================
+/* ============================================
    LOGIN ROUTES
-================================================ */
+============================================ */
 app.get('/', (req, res) => res.render('login.ejs'));
 app.get('/login', (req, res) => res.render('login.ejs'));
 
@@ -63,28 +64,32 @@ app.post('/loginProcess', async (req, res) => {
     const sql = 'SELECT * FROM users WHERE username = ? LIMIT 1';
     const [rows] = await pool.query(sql, [username]);
 
-    if (rows.length === 0 || password !== rows[0].password) {
+    if (rows.length === 0)
       return res.render('login.ejs', {
         loginError: 'Invalid username or password',
       });
-    }
 
     const user = rows[0];
+
+    if (password !== user.password)
+      return res.render('login.ejs', {
+        loginError: 'Invalid username or password',
+      });
 
     req.session.authenticated = true;
     req.session.username = user.username;
     req.session.userId = user.userId;
 
-    res.redirect('/home');
+    return res.redirect('/home');
   } catch (err) {
     console.error(err);
-    res.render('login.ejs', { loginError: 'Server error' });
+    return res.render('login.ejs', { loginError: 'Server error' });
   }
 });
 
-/* ================================================
+/* ============================================
    HOME DASHBOARD
-================================================ */
+============================================ */
 app.get('/home', ensureLoggedIn, async (req, res) => {
   try {
     const [foods] = await pool.query(
@@ -97,20 +102,20 @@ app.get('/home', ensureLoggedIn, async (req, res) => {
     res.render('home.ejs', { foods, logs });
   } catch (err) {
     console.error(err);
-    res.send('Dashboard error');
+    res.send('Error loading dashboard');
   }
 });
 
-/* ================================================
-   DATE FORMATTER (yyyy-mm-dd)
-================================================ */
-function formatDate(date) {
-  return new Date(date).toISOString().split('T')[0];
+/* ============================================
+   DATE HANDLER
+============================================ */
+function formatDateSQL(date) {
+  return new Date(date).toISOString().slice(0, 10);
 }
 
-/* ================================================
-   ADD FOOD ENTRY
-================================================ */
+/* ============================================
+   ADD FOOD (Manual Form)
+============================================ */
 app.post('/addFood', ensureLoggedIn, async (req, res) => {
   let {
     name,
@@ -129,7 +134,7 @@ app.post('/addFood', ensureLoggedIn, async (req, res) => {
     entryDate,
   } = req.body;
 
-  entryDate = entryDate ? formatDate(entryDate) : formatDate(new Date());
+  entryDate = entryDate ? formatDateSQL(entryDate) : formatDateSQL(new Date());
 
   const sql = `
     INSERT INTO foods
@@ -157,13 +162,13 @@ app.post('/addFood', ensureLoggedIn, async (req, res) => {
   res.redirect('/home');
 });
 
-/* ================================================
-   ADD GYM LOG ENTRY
-================================================ */
+/* ============================================
+   ADD GYM LOG
+============================================ */
 app.post('/addGymLog', ensureLoggedIn, async (req, res) => {
   let { exercise, weight, reps, entryDate } = req.body;
 
-  entryDate = entryDate ? formatDate(entryDate) : formatDate(new Date());
+  entryDate = entryDate ? formatDateSQL(entryDate) : formatDateSQL(new Date());
 
   const sql = `
     INSERT INTO gym_logs (exercise, weight, reps, entryDate)
@@ -174,68 +179,83 @@ app.post('/addGymLog', ensureLoggedIn, async (req, res) => {
   res.redirect('/home');
 });
 
-/* ================================================
-   FOOD SEARCH
-   - Returns macros for foods
-   - USING OPEN FOOD FACTS
-================================================ */
-app.get('/searchFood', ensureLoggedIn, async (req, res) => {
+/* ============================================
+   SEARCH FOOD — OPENFOODFACTS API
+============================================ */
+app.get('/searchFood', async (req, res) => {
   const query = req.query.query;
   if (!query) return res.json([]);
 
   try {
-    const url =
-      'https://world.openfoodfacts.org/api/v2/search?' +
-      'fields=product_name,nutriments&page_size=10&' +
-      'search_terms=' +
-      encodeURIComponent(query);
+    const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(
+      query
+    )}&search_simple=1&json=1`;
 
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'GalTrackerApp/1.0 (student-project@csumb.edu)',
-      },
-    });
-
-    const data = await response.json();
+    const apiResponse = await fetch(url);
+    const data = await apiResponse.json();
 
     if (!data.products) return res.json([]);
 
-    const items = data.products.map((p) => {
-      const n = p.nutriments || {};
+    const results = data.products
+      .filter((p) => p.product_name)
+      .slice(0, 10)
+      .map((p) => ({
+        name: p.product_name || 'Unknown',
+        calories: p.nutriments['energy-kcal_100g'] || 0,
+        protein: p.nutriments.proteins_100g || 0,
+        carbs: p.nutriments.carbohydrates_100g || 0,
+        fat: p.nutriments.fat_100g || 0,
+        sodium: p.nutriments.sodium_100g || 0,
+        mealType: 'Snack',
+        entryDate: formatDateSQL(new Date()),
+      }));
 
-      return {
-        name: p.product_name || 'Unknown food',
-        calories: n['energy-kcal_100g'] || 0,
-        protein: n.proteins_100g || 0,
-        carbs: n.carbohydrates_100g || 0,
-        fat: n.fat_100g || 0,
-        sodium: n.sodium_100g || 0,
-        sugar: n.sugars_100g || 0,
-        fiber: n.fiber_100g || 0,
-      };
-    });
-
-    res.json(items);
+    res.json(results);
   } catch (err) {
-    console.error('OpenFoodFacts Error:', err);
+    console.error('API Error:', err);
     res.json([]);
   }
 });
 
-/* ================================================
-   TEST DATABASE CONNECTION
-================================================ */
+/* ============================================
+   INSERT FOOD FROM SEARCH CLICK (AJAX)
+============================================ */
+app.post('/addFoodFromSearch', ensureLoggedIn, async (req, res) => {
+  let food = req.body;
+
+  const sql = `
+    INSERT INTO foods (name, calories, protein, carbs, fat, sodium, mealType, entryDate)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  await pool.query(sql, [
+    food.name,
+    food.calories,
+    food.protein,
+    food.carbs,
+    food.fat,
+    food.sodium,
+    food.mealType || 'Snack',
+    food.entryDate || formatDateSQL(new Date()),
+  ]);
+
+  res.json({ success: true });
+});
+
+/* ============================================
+   DB TEST ROUTE
+============================================ */
 app.get('/dbTest', async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT NOW()');
     res.send(rows);
   } catch (err) {
-    res.status(500).send('DB error');
+    res.status(500).send('Database error');
   }
 });
 
-/* ================================================
+/* ============================================
    START SERVER
-================================================ */
+============================================ */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Website running on port ${PORT}`));
