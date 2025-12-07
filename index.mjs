@@ -1,80 +1,99 @@
 import express from "express";
 import mysql from "mysql2/promise";
 import session from "express-session";
+import bcrypt from "bcrypt";
 import "dotenv/config";
 
 const app = express();
 
-/* ================================
-   SESSION SETUP
-================================ */
+/* ========================================================
+   SESSION CONFIGURATION
+   Makes req.session available & persistent across pages
+======================================================== */
 app.use(
   session({
-    secret: "superSecretKey123",
+    secret: "superSecretKey123", // random string
     resave: false,
     saveUninitialized: true,
   })
 );
 
-// Make session available in all EJS files
+// Makes session available inside ALL EJS files as "session"
 app.use((req, res, next) => {
   res.locals.session = req.session;
   next();
 });
 
-/* ================================
-   APP + DATABASE CONFIG
-================================ */
+/* ========================================================
+   EXPRESS SETTINGS
+======================================================== */
 app.set("view engine", "ejs");
-app.use(express.static("public"));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public")); // serves CSS, JS, images
+app.use(express.urlencoded({ extended: true })); // allows POST form data
 
-// DB connection
+/* ========================================================
+   DATABASE CONNECTION POOL
+   Using .env for security
+======================================================== */
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_DATABASE,
+  waitForConnections: true,
   connectionLimit: 10,
 });
 
-/* ================================
-   ROUTES — LOGIN
-================================ */
+/* ========================================================
+   MIDDLEWARE: PROTECT ROUTES
+   Blocks access unless logged in
+======================================================== */
+function ensureLoggedIn(req, res, next) {
+  if (!req.session.authenticated) {
+    return res.redirect("/login");
+  }
+  next();
+}
+
+/* ========================================================
+   LOGIN ROUTES
+======================================================== */
+
+// Show login form
 app.get("/", (req, res) => {
-  res.render("login.ejs", { loginError: null });
+  res.render("login.ejs");
 });
 
 app.get("/login", (req, res) => {
-  res.render("login.ejs", { loginError: null });
+  res.render("login.ejs");
 });
 
+// PROCESS LOGIN
 app.post("/loginProcess", async (req, res) => {
   const { username, password } = req.body;
 
   try {
+    // 1. Check if username exists
     const sql = "SELECT * FROM users WHERE username = ? LIMIT 1";
     const [rows] = await pool.query(sql, [username]);
 
     if (rows.length === 0) {
-      return res.render("login.ejs", {
-        loginError: "Invalid username or password",
-      });
+      return res.render("login.ejs", { loginError: "Invalid username or password" });
     }
 
     const user = rows[0];
 
+    // 2. Compare passwords (simple non-hashed version for your DB)
     if (password !== user.password) {
-      return res.render("login.ejs", {
-        loginError: "Invalid username or password",
-      });
+      return res.render("login.ejs", { loginError: "Invalid username or password" });
     }
 
-    // SUCCESS!
+    // 3. Store session info
     req.session.authenticated = true;
-    req.session.userId = user.userId;
     req.session.username = user.username;
+    req.session.userId = user.userId; // required for user-linked tables later
 
+    // 4. Send to dashboard
     return res.redirect("/home");
   } catch (err) {
     console.error(err);
@@ -82,94 +101,76 @@ app.post("/loginProcess", async (req, res) => {
   }
 });
 
-/* ================================
-   ROUTES — HOME DASHBOARD
-================================ */
-app.get("/home", async (req, res) => {
-  if (!req.session.authenticated) return res.redirect("/login");
-
+/* ========================================================
+   HOME (DASHBOARD)
+   Loads foods + gym logs and displays them
+   NOTICE HOW ENSURED LOGGEDIN IS PASSED HERE
+======================================================== */
+app.get("/home", ensureLoggedIn, async (req, res) => {
   try {
-    // Get foods
+    // Load foods
     const [foods] = await pool.query(
-      "SELECT * FROM foods WHERE userId = ? ORDER BY createdAt DESC",
-      [req.session.userId]
+      "SELECT * FROM foods ORDER BY entryDate DESC"
     );
 
-    // Get gym logs
+    // Load gym logs
     const [logs] = await pool.query(
-      "SELECT * FROM gym_logs WHERE userId = ? ORDER BY createdAt DESC",
-      [req.session.userId]
+      "SELECT * FROM gym_logs ORDER BY entryDate DESC"
     );
 
     res.render("home.ejs", { foods, logs });
   } catch (err) {
     console.error(err);
-    res.send("Database error loading dashboard.");
+    res.send("Error loading dashboard");
   }
 });
 
-/* ================================
-   ADD FOOD
-================================ */
-app.post("/addFood", async (req, res) => {
-  if (!req.session.authenticated) return res.redirect("/login");
+/* ========================================================
+   ADD FOOD — INSERT INTO DATABASE
+======================================================== */
+app.post("/addFood", ensureLoggedIn, async (req, res) => {
+  const { foodName, calories, mealType, entryDate } = req.body;
 
-  const { name, calories, protein, carbs, fat } = req.body;
+  const sql = `
+    INSERT INTO foods (name, calories, mealType, entryDate)
+    VALUES (?, ?, ?, ?)
+  `;
 
+  await pool.query(sql, [foodName, calories, mealType, entryDate]);
+  res.redirect("/home");
+});
+
+/* ========================================================
+   ADD GYM LOG — INSERT INTO DATABASE
+======================================================== */
+app.post("/addGymLog", ensureLoggedIn, async (req, res) => {
+  const { exercise, weight, reps, entryDate } = req.body;
+
+  const sql = `
+    INSERT INTO gym_logs (exercise, weight, reps, entryDate)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  await pool.query(sql, [exercise, weight, reps, entryDate]);
+  res.redirect("/home");
+});
+
+/* ========================================================
+   DEBUG: TEST DB CONNECTION
+======================================================== */
+app.get("/dbTest", async (req, res) => {
   try {
-    const sql = `
-      INSERT INTO foods (userId, name, calories, protein, carbs, fat)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-
-    await pool.query(sql, [
-      req.session.userId,
-      name,
-      calories || null,
-      protein || null,
-      carbs || null,
-      fat || null,
-    ]);
-
-    res.redirect("/home");
+    const [rows] = await pool.query("SELECT NOW()");
+    res.send(rows);
   } catch (err) {
-    console.error(err);
-    res.send("Error adding food.");
+    res.status(500).send("Database error");
   }
 });
 
-/* ================================
-   ADD GYM LOG
-================================ */
-app.post("/addGymLog", async (req, res) => {
-  if (!req.session.authenticated) return res.redirect("/login");
-
-  const { exercise, weight, reps } = req.body;
-
-  try {
-    const sql = `
-      INSERT INTO gym_logs (userId, exercise, weight, reps)
-      VALUES (?, ?, ?, ?)
-    `;
-
-    await pool.query(sql, [
-      req.session.userId,
-      exercise,
-      weight || null,
-      reps || null,
-    ]);
-
-    res.redirect("/home");
-  } catch (err) {
-    console.error(err);
-    res.send("Error adding gym log.");
-  }
-});
-
-/* ================================
+/* ========================================================
    START SERVER
-================================ */
-let port = 3000;
-app.listen(port, () => {
-  console.log(`Website is live at port ${port}`);
+======================================================== */
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Website is live at port: ${PORT}`);
 });
