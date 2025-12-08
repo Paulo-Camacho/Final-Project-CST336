@@ -102,3 +102,17 @@ document.addEventListener('DOMContentLoaded', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
+
+// ============================
+// SHOW ALL FOODS AS JSON
+// ============================
+const showJsonBtn = document.getElementById('showJsonBtn');
+const jsonOutput = document.getElementById('jsonOutput');
+
+showJsonBtn.addEventListener('click', async () => {
+  const res = await fetch('/api/foods');
+  const data = await res.json();
+
+  jsonOutput.style.display = 'block';
+  jsonOutput.textContent = JSON.stringify(data, null, 2);
+});

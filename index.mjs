@@ -52,6 +52,21 @@ function ensureLoggedIn(req, res, next) {
 }
 
 /* ============================================
+   API: GET ALL FOODS AS JSON
+============================================ */
+app.get('/api/foods', ensureLoggedIn, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT * FROM foods ORDER BY entryDate DESC'
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('API /api/foods error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/* ============================================
    LOGIN ROUTES
 ============================================ */
 app.get('/', (req, res) => res.render('login.ejs'));
