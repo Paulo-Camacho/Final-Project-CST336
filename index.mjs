@@ -163,6 +163,22 @@ app.post('/addFood', ensureLoggedIn, async (req, res) => {
 });
 
 /* ============================================
+   Update the table
+============================================ */
+app.post('/updateFood', ensureLoggedIn, async (req, res) => {
+  const { id, name, calories, protein, carbs, fat, sodium } = req.body;
+
+  const sql = `
+    UPDATE foods
+    SET name = ?, calories = ?, protein = ?, carbs = ?, fat = ?, sodium = ?
+    WHERE id = ? LIMIT 1
+  `;
+
+  await pool.query(sql, [name, calories, protein, carbs, fat, sodium, id]);
+  res.redirect('/home');
+});
+
+/* ============================================
    ADD GYM LOG
 ============================================ */
 app.post('/addGymLog', ensureLoggedIn, async (req, res) => {

@@ -1,229 +1,251 @@
 <%- include("partials/header.ejs") %>
 <body>
-<%- include("partials/nav_bar.ejs") %>
+  <%- include("partials/nav_bar.ejs") %>
 
-<div class="container mt-4">
+  <div class="container mt-4">
 
-  <h1 class="mb-4">Gal_Tracker!</h1>
+    <h1 class="mb-4 text-center">Gal_Tracker!</h1>
 
-  <!-- ================================
-       SEARCH FOOD (API)
-  ================================ -->
-  <section class="mb-5">
-    <h2>Search Foods (Public API)</h2>
+    <!-- ============================================
+         SEARCH FOOD (PUBLIC API)
+    ============================================= -->
+    <section class="mb-5 text-center">
+      <h2>Search Foods (Public API)</h2>
 
-    <input id="foodSearchInput" class="form-control mb-3" type="text" placeholder="Search for food...">
+      <form id="foodSearchForm" class="mb-3">
+        <input
+          type="text"
+          id="foodSearchInput"
+          class="form-control form-control-lg"
+          placeholder="Search any food item…">
+        <button type="submit" class="btn btn-primary mt-3">Search</button>
+      </form>
 
-    <button id="foodSearchBtn" class="btn btn-primary mb-3">Search</button>
+      <!-- Search Results Container -->
+      <div id="searchResults" class="list-group"></div>
+    </section>
 
-    <ul id="foodResults" class="list-group"></ul>
-  </section>
+    <!-- ============================================
+         MACRO TRACKER SECTION
+    ============================================= -->
+    <section class="mb-5">
+      <h2>Macro_Tracker</h2>
 
+      <!-- Add Food Form -->
+      <form action="/addFood" method="POST" class="mb-3">
+        <div class="row g-3">
 
-  <!-- ================================
-       MACRO TRACKER
-  ================================ -->
-  <section class="mb-5">
-    <h2>Macro_Tracker</h2>
+          <div class="col-md-3">
+            <input type="text" name="name" class="form-control" placeholder="Name">
+          </div>
 
-    <!-- Add Food Form -->
-    <form action="/addFood" method="POST" class="mb-3">
-      <div class="row g-3">
+          <div class="col-md-2">
+            <input type="number" name="calories" class="form-control"
+                   placeholder="Calories" step="0.01">
+          </div>
 
-        <div class="col-md-3">
-          <input type="text" name="name" class="form-control" placeholder="Name" required>
+          <div class="col-md-2">
+            <input type="number" name="protein" class="form-control"
+                   placeholder="Protein (g)" step="0.01">
+          </div>
+
+          <div class="col-md-2">
+            <input type="number" name="carbs" class="form-control"
+                   placeholder="Carbs (g)" step="0.01">
+          </div>
+
+          <div class="col-md-2">
+            <input type="number" name="fat" class="form-control"
+                   placeholder="Fat (g)" step="0.01">
+          </div>
+
+          <div class="col-md-2">
+            <input type="number" name="sodium" class="form-control"
+                   placeholder="Sodium (mg)" step="0.01">
+          </div>
+
+          <div class="col-md-2">
+            <select name="mealType" class="form-select">
+              <option value="">meal_type</option>
+              <option>Breakfast</option>
+              <option>Lunch</option>
+              <option>Din ner</option>
+              <option>Snack</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <input type="date" name="entryDate" class="form-control">
+          </div>
+
+          <div class="col-md-2">
+            <button class="btn btn-success w-100">Add Food</button>
+          </div>
+
         </div>
+      </form>
 
-        <div class="col-md-2">
-          <input type="number" name="calories" class="form-control" placeholder="Calories" step="0.01">
-        </div>
-
-        <div class="col-md-2">
-          <input type="number" name="protein" class="form-control" placeholder="Protein (g)" step="0.01">
-        </div>
-
-        <div class="col-md-2">
-          <input type="number" name="carbs" class="form-control" placeholder="Carbs (g)" step="0.01">
-        </div>
-
-        <div class="col-md-2">
-          <input type="number" name="fat" class="form-control" placeholder="Fat (g)" step="0.01">
-        </div>
-
-        <div class="col-md-2">
-          <input type="number" name="sodium" class="form-control" placeholder="Sodium (mg)" step="0.01">
-        </div>
-
-        <div class="col-md-2">
-          <select name="mealType" class="form-select">
-            <option>meal_type</option>
-            <option>Breakfast</option>
-            <option>Lunch</option>
-            <option>Dinner</option>
-            <option>Snack</option>
-          </select>
-        </div>
-
-        <div class="col-md-3">
-          <input type="date" name="entryDate" class="form-control">
-        </div>
-
-        <div class="col-md-2">
-          <button class="btn btn-success w-100">Add Food</button>
-        </div>
-
-      </div>
-    </form>
-
-    <!-- FOOD TABLE -->
-    <table class="table table-dark table-striped mt-3">
-      <thead>
-        <tr>
-          <th>Food</th>
-          <th>Calories</th>
-          <th>Protein</th>
-          <th>Carbs</th>
-          <th>Fat</th>
-          <th>Sodium</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (foods && foods.length > 0) { %>
-          <% foods.forEach(food => { %>
-            <tr>
-              <td><%= food.name %></td>
-              <td><%= food.calories %></td>
-              <td><%= food.protein %></td>
-              <td><%= food.carbs %></td>
-              <td><%= food.fat %></td>
-              <td><%= food.sodium %></td>
-              <td><%= food.entryDate.toISOString().split("T")[0] %></td>
-            </tr>
-          <% }) %>
-        <% } else { %>
+      <!-- DISPLAY FOOD TABLE -->
+      <table class="table table-dark table-striped mt-3">
+        <thead>
           <tr>
-            <td colspan="7" class="text-center">No food entries yet.</td>
+            <th>Food</th>
+            <th>Calories</th>
+            <th>Protein</th>
+            <th>Carbs</th>
+            <th>Fat</th>
+            <th>Sodium</th>
+            <th>Date</th>
+            <th>Edit</th>
           </tr>
-        <% } %>
-      </tbody>
-    </table>
-  </section>
+        </thead>
+        <tbody>
+          <% if (foods && foods.length > 0) { %>
+            <% foods.forEach(food => { %>
+              <tr>
+                <td><%= food.name %></td>
+                <td><%= food.calories %></td>
+                <td><%= food.protein %></td>
+                <td><%= food.carbs %></td>
+                <td><%= food.fat %></td>
+                <td><%= food.sodium %></td>
+                <td><%= food.entryDate.toISOString().split("T")[0] %></td>
 
-
-  <!-- ================================
-       GYM LOG
-  ================================ -->
-  <section class="mt-5">
-    <h2>Gym_Log</h2>
-
-    <!-- Add Gym Log Form -->
-    <form action="/addGymLog" method="POST" class="mb-3">
-      <div class="row g-3">
-
-        <div class="col-md-3">
-          <input type="text" name="exercise" class="form-control" placeholder="Exercise">
-        </div>
-
-        <div class="col-md-2">
-          <input type="number" name="weight" class="form-control" placeholder="Weight" step="0.01">
-        </div>
-
-        <div class="col-md-2">
-          <input type="number" name="reps" class="form-control" placeholder="Reps">
-        </div>
-
-        <div class="col-md-3">
-          <input type="date" name="entryDate" class="form-control">
-        </div>
-
-        <div class="col-md-2">
-          <button class="btn btn-primary w-100">Add Log</button>
-        </div>
-
-      </div>
-    </form>
-
-    <!-- GYM TABLE -->
-    <table class="table table-dark table-striped mt-3">
-      <thead>
-        <tr>
-          <th>Exercise</th>
-          <th>Weight</th>
-          <th>Reps</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% if (logs && logs.length > 0) { %>
-          <% logs.forEach(log => { %>
+                <!-- EDIT BUTTON (opens modal) -->
+                <td>
+                  <button
+                    type="button"
+                    class="btn btn-warning btn-sm editFoodBtn"
+                    data-id="<%= food.id %>"
+                    data-name="<%= food.name %>"
+                    data-calories="<%= food.calories %>"
+                    data-protein="<%= food.protein %>"
+                    data-carbs="<%= food.carbs %>"
+                    data-fat="<%= food.fat %>"
+                    data-sodium="<%= food.sodium %>">
+                    Edit
+                  </button>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
             <tr>
-              <td><%= log.exercise %></td>
-              <td><%= log.weight %></td>
-              <td><%= log.reps %></td>
-              <td><%= log.entryDate.toISOString().split("T")[0] %></td>
+              <td colspan="8" class="text-center">No food entries yet.</td>
             </tr>
-          <% }) %>
-        <% } else { %>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ============================================
+         GYM LOG SECTION
+    ============================================= -->
+    <section class="mt-5">
+      <h2>Gym_Log</h2>
+
+      <!-- Add Gym Log Form -->
+      <form action="/addGymLog" method="POST" class="mb-3">
+        <div class="row g-3">
+
+          <div class="col-md-3">
+            <input type="text" name="exercise" class="form-control" placeholder="Exercise">
+          </div>
+
+          <div class="col-md-2">
+            <input type="number" name="weight" class="form-control"
+                   placeholder="Weight" step="0.01">
+          </div>
+
+          <div class="col-md-2">
+            <input type="number" name="reps" class="form-control" placeholder="Reps">
+          </div>
+
+          <div class="col-md-3">
+            <input type="date" name="entryDate" class="form-control">
+          </div>
+
+          <div class="col-md-2">
+            <button class="btn btn-primary w-100">Add Log</button>
+          </div>
+
+        </div>
+      </form>
+
+      <!-- DISPLAY GYM TABLE -->
+      <table class="table table-dark table-striped mt-3">
+        <thead>
           <tr>
-            <td colspan="4" class="text-center">No gym logs yet.</td>
+            <th>Exercise</th>
+            <th>Weight</th>
+            <th>Reps</th>
+            <th>Date</th>
           </tr>
-        <% } %>
-      </tbody>
-    </table>
-  </section>
+        </thead>
+        <tbody>
+          <% if (logs && logs.length > 0) { %>
+            <% logs.forEach(log => { %>
+              <tr>
+                <td><%= log.exercise %></td>
+                <td><%= log.weight %></td>
+                <td><%= log.reps %></td>
+                <td><%= log.entryDate.toISOString().split("T")[0] %></td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="4" class="text-center">No gym logs yet.</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </section>
+  </div>
 
-</div>
+  <!-- EDIT FOOD MODAL -->
+  <div class="modal fade" id="editFoodModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content bg-dark text-white">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Food Entry</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
 
-<%- include("partials/footer.ejs") %>
+        <form id="editFoodForm" method="POST" action="/updateFood">
+          <div class="modal-body">
 
-<!-- ================================
-     JS FOR FOOD API SEARCH
-================================ -->
-<script>
-  const searchBtn = document.getElementById("foodSearchBtn");
-  const searchInput = document.getElementById("foodSearchInput");
-  const resultsList = document.getElementById("foodResults");
+            <input type="hidden" name="id" id="editFoodId">
 
-  searchBtn.addEventListener("click", async () => {
-    const query = searchInput.value.trim();
-    if (!query) return;
+            <label class="mt-1">Name</label>
+            <input type="text" class="form-control" id="editFoodName" name="name">
 
-    const res = await fetch(`/searchFood?query=${encodeURIComponent(query)}`);
-    const foods = await res.json();
+            <label class="mt-2">Calories</label>
+            <input type="number" class="form-control" id="editFoodCalories" name="calories" step="0.01">
 
-    resultsList.innerHTML = "";
+            <label class="mt-2">Protein (g)</label>
+            <input type="number" class="form-control" id="editFoodProtein" name="protein" step="0.01">
 
-    if (foods.length === 0) {
-      resultsList.innerHTML = `<li class="list-group-item">No results found.</li>`;
-      return;
-    }
+            <label class="mt-2">Carbs (g)</label>
+            <input type="number" class="form-control" id="editFoodCarbs" name="carbs" step="0.01">
 
-    foods.forEach(item => {
-      const li = document.createElement("li");
-      li.className = "list-group-item list-group-item-action";
-      li.style.cursor = "pointer";
+            <label class="mt-2">Fat (g)</label>
+            <input type="number" class="form-control" id="editFoodFat" name="fat" step="0.01">
 
-      li.textContent = `${item.name} — ${item.calories} cal`;
+            <label class="mt-2">Sodium (mg)</label>
+            <input type="number" class="form-control" id="editFoodSodium" name="sodium" step="0.01">
 
-      li.addEventListener("click", async () => {
-        const insertRes = await fetch("/addFoodFromSearch", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(item)
-        });
+          </div>
 
-        if (insertRes.ok) {
-          alert(`${item.name} added!`);
-          window.location.reload();
-        } else {
-          alert("Error adding food.");
-        }
-      });
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-warning">Save Changes</button>
+          </div>
 
-      resultsList.appendChild(li);
-    });
-  });
-</script>
+        </form>
+      </div>
+    </div>
+  </div>
 
+  <%- include("partials/footer.ejs") %>
+
+  <!-- Your client-side JS (search + edit modal wiring) -->
+  <script src="/scripts.js"></script>
 </body>
