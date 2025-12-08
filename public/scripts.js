@@ -2,9 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================
   // EDIT FOOD MODAL
   // ============================
-
   const editButtons = document.querySelectorAll('.editFoodBtn');
-  const modal = new bootstrap.Modal(document.getElementById('editFoodModal'));
+  const modalElement = document.getElementById('editFoodModal');
+  const modal = new bootstrap.Modal(modalElement);
 
   editButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -46,17 +46,17 @@ document.addEventListener('DOMContentLoaded', () => {
     foods.forEach((item) => {
       const div = document.createElement('div');
       div.className = 'list-group-item list-group-item-action';
-      div.textContent = `${item.name} — ${item.calories} cal`;
       div.style.cursor = 'pointer';
+      div.textContent = `${item.name} — ${item.calories} cal`;
 
       div.addEventListener('click', async () => {
-        const response = await fetch('/addFoodFromSearch', {
+        const insertRes = await fetch('/addFoodFromSearch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(item),
         });
 
-        if (response.ok) {
+        if (insertRes.ok) {
           alert(`${item.name} added!`);
           window.location.reload();
         }
@@ -64,5 +64,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
       resultsList.appendChild(div);
     });
+  });
+
+  // ============================
+  // SCROLL TO TOP BUTTON
+  // ============================
+
+  // Create the button dynamically
+  const scrollBtn = document.createElement('button');
+  scrollBtn.id = 'scrollTopBtn';
+  scrollBtn.innerHTML = '↑ Top';
+  scrollBtn.style.position = 'fixed';
+  scrollBtn.style.bottom = '20px';
+  scrollBtn.style.right = '20px';
+  scrollBtn.style.padding = '10px 15px';
+  scrollBtn.style.background = '#ffc107';
+  scrollBtn.style.border = 'none';
+  scrollBtn.style.borderRadius = '8px';
+  scrollBtn.style.fontWeight = 'bold';
+  scrollBtn.style.cursor = 'pointer';
+  scrollBtn.style.display = 'none'; // hidden by default
+  scrollBtn.style.zIndex = '9999';
+
+  document.body.appendChild(scrollBtn);
+
+  // Show/hide button when scrolling
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 250) {
+      scrollBtn.style.display = 'block';
+    } else {
+      scrollBtn.style.display = 'none';
+    }
+  });
+
+  // Smooth scroll back to top
+  scrollBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
