@@ -2,9 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================
   // EDIT FOOD MODAL
   // ============================
+
   const editButtons = document.querySelectorAll('.editFoodBtn');
-  const modalElement = document.getElementById('editFoodModal');
-  const modal = new bootstrap.Modal(modalElement);
+  const modal = new bootstrap.Modal(document.getElementById('editFoodModal'));
 
   editButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
@@ -46,21 +46,19 @@ document.addEventListener('DOMContentLoaded', () => {
     foods.forEach((item) => {
       const div = document.createElement('div');
       div.className = 'list-group-item list-group-item-action';
-      div.style.cursor = 'pointer';
       div.textContent = `${item.name} — ${item.calories} cal`;
+      div.style.cursor = 'pointer';
 
       div.addEventListener('click', async () => {
-        const insertRes = await fetch('/addFoodFromSearch', {
+        const response = await fetch('/addFoodFromSearch', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(item),
         });
 
-        if (insertRes.ok) {
+        if (response.ok) {
           alert(`${item.name} added!`);
           window.location.reload();
-        } else {
-          alert('Error adding food.');
         }
       });
 

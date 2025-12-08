@@ -17,7 +17,7 @@ app.use(
   })
 );
 
-// Make session available to all EJS templates
+// Make session available to EJS
 app.use((req, res, next) => {
   res.locals.session = req.session;
   next();
@@ -29,10 +29,10 @@ app.use((req, res, next) => {
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
-app.use(express.json()); // Needed for API insert from JS
+app.use(express.json());
 
 /* ============================================
-   DATABASE CONNECTION
+   DATABASE POOL
 ============================================ */
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
@@ -44,7 +44,7 @@ const pool = mysql.createPool({
 });
 
 /* ============================================
-   LOGIN GUARD
+   LOGIN CHECK
 ============================================ */
 function ensureLoggedIn(req, res, next) {
   if (!req.session.authenticated) return res.redirect('/login');
@@ -107,14 +107,14 @@ app.get('/home', ensureLoggedIn, async (req, res) => {
 });
 
 /* ============================================
-   DATE HANDLER
+   DATE FORMATTER
 ============================================ */
 function formatDateSQL(date) {
   return new Date(date).toISOString().slice(0, 10);
 }
 
 /* ============================================
-   ADD FOOD (Manual Form)
+   ADD FOOD
 ============================================ */
 app.post('/addFood', ensureLoggedIn, async (req, res) => {
   let {
@@ -163,22 +163,6 @@ app.post('/addFood', ensureLoggedIn, async (req, res) => {
 });
 
 /* ============================================
-   Update the table
-============================================ */
-app.post('/updateFood', ensureLoggedIn, async (req, res) => {
-  const { id, name, calories, protein, carbs, fat, sodium } = req.body;
-
-  const sql = `
-    UPDATE foods
-    SET name = ?, calories = ?, protein = ?, carbs = ?, fat = ?, sodium = ?
-    WHERE id = ? LIMIT 1
-  `;
-
-  await pool.query(sql, [name, calories, protein, carbs, fat, sodium, id]);
-  res.redirect('/home');
-});
-
-/* ============================================
    ADD GYM LOG
 ============================================ */
 app.post('/addGymLog', ensureLoggedIn, async (req, res) => {
@@ -194,9 +178,9 @@ app.post('/addGymLog', ensureLoggedIn, async (req, res) => {
   await pool.query(sql, [exercise, weight, reps, entryDate]);
   res.redirect('/home');
 });
-// Hello world
+
 /* ============================================
-   SEARCH FOOD — OPENFOODFACTS API
+   SEARCH FOOD API (OpenFoodFacts)
 ============================================ */
 app.get('/searchFood', async (req, res) => {
   const query = req.query.query;
@@ -216,7 +200,7 @@ app.get('/searchFood', async (req, res) => {
       .filter((p) => p.product_name)
       .slice(0, 10)
       .map((p) => ({
-        name: p.product_name || 'Unknown',
+        name: p.product_name,
         calories: p.nutriments['energy-kcal_100g'] || 0,
         protein: p.nutriments.proteins_100g || 0,
         carbs: p.nutriments.carbohydrates_100g || 0,
@@ -234,7 +218,25 @@ app.get('/searchFood', async (req, res) => {
 });
 
 /* ============================================
-   INSERT FOOD FROM SEARCH CLICK (AJAX)
+   DELETE FOOD ENTRY
+============================================ */
+app.post('/deleteFood', ensureLoggedIn, async (req, res) => {
+  console.log('DELETE HIT → req.body:', req.body);
+  console.log('DELETE route triggered, req.body:', req.body);
+  const { foodId } = req.body;
+
+  try {
+    const sql = `DELETE FROM foods WHERE foodId = ?`;
+    await pool.query(sql, [foodId]);
+    res.redirect('/home');
+  } catch (err) {
+    console.error('Delete failed:', err);
+    res.status(500).send('Error deleting food entry.');
+  }
+});
+
+/* ============================================
+   INSERT FOOD (From Search)
 ============================================ */
 app.post('/addFoodFromSearch', ensureLoggedIn, async (req, res) => {
   let food = req.body;
@@ -259,7 +261,38 @@ app.post('/addFoodFromSearch', ensureLoggedIn, async (req, res) => {
 });
 
 /* ============================================
-   DB TEST ROUTE
+   UPDATE FOOD ENTRY
+============================================ */
+
+app.post('/updateFood', ensureLoggedIn, async (req, res) => {
+  const { foodId, name, calories, protein, carbs, fat, sodium } = req.body;
+
+  try {
+    const sql = `
+      UPDATE foods
+      SET name = ?, calories = ?, protein = ?, carbs = ?, fat = ?, sodium = ?
+      WHERE foodId = ?
+    `;
+
+    await pool.query(sql, [
+      name,
+      calories,
+      protein,
+      carbs,
+      fat,
+      sodium,
+      foodId, // <- CORRECT COLUMN NAME
+    ]);
+
+    res.redirect('/home');
+  } catch (err) {
+    console.error('Update error:', err);
+    res.status(500).send('Update failed.');
+  }
+});
+
+/* ============================================
+   TEST DB
 ============================================ */
 app.get('/dbTest', async (req, res) => {
   try {
