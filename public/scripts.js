@@ -104,15 +104,30 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================
-// SHOW ALL FOODS AS JSON
+// SHOW ALL FOODS AS JSON (TOGGLE)
 // ============================
 const showJsonBtn = document.getElementById('showJsonBtn');
 const jsonOutput = document.getElementById('jsonOutput');
 
-showJsonBtn.addEventListener('click', async () => {
-  const res = await fetch('/api/foods');
-  const data = await res.json();
+let jsonLoaded = false; // Only fetch once
 
+showJsonBtn.addEventListener('click', async () => {
+  // If visible → hide it
+  if (jsonOutput.style.display === 'block') {
+    jsonOutput.style.display = 'none';
+    showJsonBtn.textContent = 'Show All Foods (JSON)';
+    return;
+  }
+
+  // If not yet loaded → fetch
+  if (!jsonLoaded) {
+    const res = await fetch('/api/foods');
+    const data = await res.json();
+    jsonOutput.textContent = JSON.stringify(data, null, 2);
+    jsonLoaded = true;
+  }
+
+  // Show JSON
   jsonOutput.style.display = 'block';
-  jsonOutput.textContent = JSON.stringify(data, null, 2);
+  showJsonBtn.textContent = 'Hide JSON';
 });
