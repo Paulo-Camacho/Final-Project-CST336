@@ -77,7 +77,7 @@
                 </div>
 
                 <div class="col-md-2">
-                    <button class="btn btn-success w-100">Add Food</button>
+                    <button class="btn btn-primary w-100">Add Food</button>
                 </div>
 
             </div>
@@ -112,7 +112,7 @@
                             <!-- EDIT BUTTON -->
                             <td>
                                 <button
-                                    class="btn btn-warning btn-sm editFoodBtn"
+                                    class="btn btn-light btn-sm editFoodBtn"
                                     data-id="<%= food.foodId %>"
                                     data-name="<%= food.name %>"
                                     data-calories="<%= food.calories %>"
@@ -128,7 +128,7 @@
                                 <!-- DELETE BUTTON -->
                                 <form action="/deleteFood" method="POST" style="display:inline-block;">
                                   <input type="hidden" name="foodId" value="<%= food.foodId %>">
-                                  <button type="submit" class="btn btn-danger btn-sm"
+                                  <button type="submit" class="btn btn-warning btn-sm"
                                           onclick="return confirm('Delete this item?')">
                                     Delete
                                   </button>
