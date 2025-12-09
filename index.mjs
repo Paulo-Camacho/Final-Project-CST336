@@ -57,7 +57,7 @@ function ensureLoggedIn(req, res, next) {
 app.get('/api/foods', ensureLoggedIn, async (req, res) => {
   try {
     const [rows] = await pool.query(
-      'SELECT * FROM foods ORDER BY entryDate DESC'
+      'SELECT * FROM foods ORDER BY createdAt DESC'
     );
     res.json(rows);
   } catch (err) {
@@ -195,7 +195,7 @@ app.post('/addGymLog', ensureLoggedIn, async (req, res) => {
 });
 
 /* ============================================
-   SEARCH FOOD API (OpenFoodFacts)
+   SEARCH FOOD API
 ============================================ */
 app.get('/searchFood', async (req, res) => {
   const query = req.query.query;
@@ -233,11 +233,9 @@ app.get('/searchFood', async (req, res) => {
 });
 
 /* ============================================
-   DELETE FOOD ENTRY
+   DELETE FOOD
 ============================================ */
 app.post('/deleteFood', ensureLoggedIn, async (req, res) => {
-  console.log('DELETE HIT → req.body:', req.body);
-  console.log('DELETE route triggered, req.body:', req.body);
   const { foodId } = req.body;
 
   try {
@@ -251,7 +249,7 @@ app.post('/deleteFood', ensureLoggedIn, async (req, res) => {
 });
 
 /* ============================================
-   INSERT FOOD (From Search)
+   ADD FOOD (From API)
 ============================================ */
 app.post('/addFoodFromSearch', ensureLoggedIn, async (req, res) => {
   let food = req.body;
@@ -276,11 +274,11 @@ app.post('/addFoodFromSearch', ensureLoggedIn, async (req, res) => {
 });
 
 /* ============================================
-   UPDATE FOOD ENTRY
+   UPDATE FOOD (FULLY FIXED)
 ============================================ */
-
 app.post('/updateFood', ensureLoggedIn, async (req, res) => {
-  const { foodId, name, calories, protein, carbs, fat, sodium } = req.body;
+  const { foodId, name, calories, protein, carbs, fat, sodium, createdAt } =
+    req.body;
 
   try {
     const sql = `
@@ -304,18 +302,6 @@ app.post('/updateFood', ensureLoggedIn, async (req, res) => {
   } catch (err) {
     console.error('Update error:', err);
     res.status(500).send('Update failed.');
-  }
-});
-
-/* ============================================
-   TEST DB
-============================================ */
-app.get('/dbTest', async (req, res) => {
-  try {
-    const [rows] = await pool.query('SELECT NOW()');
-    res.send(rows);
-  } catch (err) {
-    res.status(500).send('Database error');
   }
 });
 

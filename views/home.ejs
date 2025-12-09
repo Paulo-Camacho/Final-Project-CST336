@@ -18,14 +18,13 @@
             <button type="submit" class="btn btn-primary mt-3">Search</button>
         </form>
 
-        <!-- Search Results Container -->
         <div id="searchResults" class="list-group"></div>
     </section>
 
 <button id="showJsonBtn" class="btn btn-info mb-3">Show All Foods (JSON)</button>
 
-<pre id="jsonOutput" style="display:none; background:#111; color:#0f0; padding:15px; border-radius:8px; max-height:300px; overflow:auto;"></pre>
-
+<pre id="jsonOutput"
+     style="display:none; background:#111; color:#0f0; padding:15px; border-radius:8px; max-height:300px; overflow:auto;"></pre>
 
 
     <!-- ============================================
@@ -34,7 +33,6 @@
     <section class="mb-5">
         <h2>Macro_Tracker</h2>
 
-        <!-- Add Food Form -->
         <form action="/addFood" method="POST" class="mb-3">
             <div class="row g-3">
 
@@ -83,7 +81,6 @@
             </div>
         </form>
 
-        <!-- DISPLAYS FOOD FROM SQL DATABASE ONTO THE WEBSITE -->
         <table class="table table-dark table-striped mt-3">
             <thead>
                 <tr>
@@ -109,7 +106,6 @@
                             <td><%= food.sodium %></td>
                             <td><%= food.createdAt.toISOString().split("T")[0] %></td>
 
-                            <!-- EDIT BUTTON -->
                             <td>
                                 <button
                                     class="btn btn-light btn-sm editFoodBtn"
@@ -125,7 +121,6 @@
                                   Edit
                                 </button>
 
-                                <!-- DELETE BUTTON -->
                                 <form action="/deleteFood" method="POST" style="display:inline-block;">
                                   <input type="hidden" name="foodId" value="<%= food.foodId %>">
                                   <button type="submit" class="btn btn-danger btn-sm"
@@ -133,7 +128,6 @@
                                     Delete
                                   </button>
                                 </form>
-
                             </td>
                         </tr>
                     <% }) %>
@@ -152,7 +146,6 @@
     <section class="mt-5">
         <h2>Gym_Log</h2>
 
-        <!-- Add Gym Log Form -->
         <form action="/addGymLog" method="POST" class="mb-3">
             <div class="row g-3">
 
@@ -179,7 +172,6 @@
             </div>
         </form>
 
-        <!-- DISPLAY GYM TABLE -->
         <table class="table table-dark table-striped mt-3">
             <thead>
                 <tr>

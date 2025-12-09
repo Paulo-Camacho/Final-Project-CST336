@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ============================
-  // FOOD SEARCH (API)
+  // FOOD SEARCH
   // ============================
   const searchForm = document.getElementById('foodSearchForm');
   const searchInput = document.getElementById('foodSearchInput');
@@ -70,8 +70,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================
   // SCROLL TO TOP BUTTON
   // ============================
-
-  // Create the button dynamically
   const scrollBtn = document.createElement('button');
   scrollBtn.id = 'scrollTopBtn';
   scrollBtn.innerHTML = '↑ Top';
@@ -84,12 +82,11 @@ document.addEventListener('DOMContentLoaded', () => {
   scrollBtn.style.borderRadius = '8px';
   scrollBtn.style.fontWeight = 'bold';
   scrollBtn.style.cursor = 'pointer';
-  scrollBtn.style.display = 'none'; // hidden by default
+  scrollBtn.style.display = 'none';
   scrollBtn.style.zIndex = '9999';
 
   document.body.appendChild(scrollBtn);
 
-  // Show/hide button when scrolling
   window.addEventListener('scroll', () => {
     if (window.scrollY > 250) {
       scrollBtn.style.display = 'block';
@@ -98,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Smooth scroll back to top
   scrollBtn.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
@@ -109,18 +105,15 @@ document.addEventListener('DOMContentLoaded', () => {
 // ============================
 const showJsonBtn = document.getElementById('showJsonBtn');
 const jsonOutput = document.getElementById('jsonOutput');
-
-let jsonLoaded = false; // Only fetch once
+let jsonLoaded = false;
 
 showJsonBtn.addEventListener('click', async () => {
-  // If visible → hide it
   if (jsonOutput.style.display === 'block') {
     jsonOutput.style.display = 'none';
     showJsonBtn.textContent = 'Show All Foods (JSON)';
     return;
   }
 
-  // If not yet loaded → fetch
   if (!jsonLoaded) {
     const res = await fetch('/api/foods');
     const data = await res.json();
@@ -128,7 +121,6 @@ showJsonBtn.addEventListener('click', async () => {
     jsonLoaded = true;
   }
 
-  // Show JSON
   jsonOutput.style.display = 'block';
   showJsonBtn.textContent = 'Hide JSON';
 });
