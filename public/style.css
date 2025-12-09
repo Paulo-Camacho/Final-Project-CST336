@@ -2,7 +2,7 @@
    GLOBAL THEME VARIABLES
    ================================ */
 :root {
-  --font-family: "JetBrains Mono", monospace;
+  --font-family: 'JetBrains Mono', monospace;
 
   --text-color: #fff;
   --text-color-alt: #aaa;
@@ -22,7 +22,7 @@
   font-weight: var(--font-weight-normal);
   font-style: normal;
   font-variant-numeric: tabular-nums lining-nums;
-  font-size: 16px;
+  font-size: 13px;
 
   text-align: center;
 }
@@ -42,7 +42,12 @@ body {
 /* ================================
    HEADINGS
    ================================ */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   color: var(--text-color);
   font-weight: var(--font-weight-bold);
 }
@@ -95,11 +100,12 @@ a:hover {
   border-color: var(--text-color) !important;
 }
 
-
 /* ================================
    FORM INPUTS
    ================================ */
-input, textarea, select {
+input,
+textarea,
+select {
   background-color: var(--background-color-alt);
   color: var(--text-color);
   border: var(--border-thickness) solid #000000;
@@ -109,7 +115,9 @@ input, textarea, select {
   font-family: var(--font-family);
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   outline: none;
   border-color: var(--text-color);
 }
@@ -117,19 +125,26 @@ input:focus, textarea:focus, select:focus {
 /* ================================
    BUTTONS
    ================================ */
-button, .btn {
+button,
+.btn {
   font-family: var(--font-family);
   font-weight: var(--font-weight-medium);
 }
 
-.btn-primary, .btn-success, .btn-warning, .btn-info, .btn-danger {
+.btn-primary,
+.btn-success,
+.btn-warning,
+.btn-info,
+.btn-danger {
   border: var(--border-thickness) solid var(--text-color-alt);
 }
 
 /* ================================
    CARDS / CONTAINERS
    ================================ */
-.card, .p-4, .shadow-sm {
+.card,
+.p-4,
+.shadow-sm {
   background-color: var(--background-color-alt) !important;
   color: var(--text-color) !important;
   border-color: #000000 !important;
@@ -143,11 +158,11 @@ table {
   border-color: var(--text-color-alt);
 }
 
-th, td {
+th,
+td {
   padding: 0.6rem;
   border-color: var(--text-color-alt);
 }
-
 
 /* Center login area */
 .login-wrapper {

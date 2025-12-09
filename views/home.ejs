@@ -83,7 +83,7 @@
             </div>
         </form>
 
-        <!-- DISPLAY FOOD TABLE -->
+        <!-- DISPLAYS FOOD FROM SQL DATABASE ONTO THE WEBSITE -->
         <table class="table table-dark table-striped mt-3">
             <thead>
                 <tr>
@@ -107,7 +107,7 @@
                             <td><%= food.carbs %></td>
                             <td><%= food.fat %></td>
                             <td><%= food.sodium %></td>
-                            <td><%= food.entryDate.toISOString().split("T")[0] %></td>
+                            <td><%= food.createdAt.toISOString().split("T")[0] %></td>
 
                             <!-- EDIT BUTTON -->
                             <td>
@@ -120,6 +120,7 @@
                                     data-carbs="<%= food.carbs %>"
                                     data-fat="<%= food.fat %>"
                                     data-sodium="<%= food.sodium %>"
+                                    data-createdat="<%= food.createdAt.toISOString().split('T')[0] %>"
                                 >
                                   Edit
                                 </button>
@@ -195,7 +196,7 @@
                             <td><%= log.exercise %></td>
                             <td><%= log.weight %></td>
                             <td><%= log.reps %></td>
-                            <td><%= log.entryDate.toISOString().split("T")[0] %></td>
+                            <td><%= log.createdAt.toISOString().split("T")[0] %></td>
                         </tr>
                     <% }) %>
                 <% } else { %>
@@ -241,6 +242,9 @@
 
           <label class="mt-2">Sodium</label>
           <input type="number" class="form-control" id="editFoodSodium" name="sodium">
+
+          <label class="mt-2">Date</label>
+          <input type="date" class="form-control" id="editFoodDate" name="createdAt">
 
         </div>
 
