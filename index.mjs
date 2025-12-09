@@ -108,10 +108,10 @@ app.post('/loginProcess', async (req, res) => {
 app.get('/home', ensureLoggedIn, async (req, res) => {
   try {
     const [foods] = await pool.query(
-      'SELECT * FROM foods ORDER BY entryDate DESC'
+      'SELECT * FROM foods ORDER BY createdAt DESC'
     );
     const [logs] = await pool.query(
-      'SELECT * FROM gym_logs ORDER BY entryDate DESC'
+      'SELECT * FROM gym_logs ORDER BY createdAt DESC'
     );
 
     res.render('home.ejs', { foods, logs });
@@ -285,7 +285,7 @@ app.post('/updateFood', ensureLoggedIn, async (req, res) => {
   try {
     const sql = `
       UPDATE foods
-      SET name = ?, calories = ?, protein = ?, carbs = ?, fat = ?, sodium = ?
+      SET name = ?, calories = ?, protein = ?, carbs = ?, fat = ?, sodium = ?, createdAt = ?
       WHERE foodId = ?
     `;
 
@@ -296,7 +296,8 @@ app.post('/updateFood', ensureLoggedIn, async (req, res) => {
       carbs,
       fat,
       sodium,
-      foodId, // <- CORRECT COLUMN NAME
+      createdAt,
+      foodId,
     ]);
 
     res.redirect('/home');

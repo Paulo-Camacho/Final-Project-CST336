@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('editFoodCarbs').value = btn.dataset.carbs;
       document.getElementById('editFoodFat').value = btn.dataset.fat;
       document.getElementById('editFoodSodium').value = btn.dataset.sodium;
+      document.getElementById('editFoodDate').value = btn.dataset.createdat;
 
       modal.show();
     });
